@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://borgersupport.com/schemas/portainer-templates.schema.json",
+  "title": "Portainer App Templates (templates.json) – version 2 & 3",
+  "description": "Kilde: portainer/portainer api/portainer.go (Template, TemplateEnv, TemplateEnvSelect, TemplateVolume, TemplateRepository, Pair) @ d661cbc0 + docs.portainer.io/advanced/app-templates/format. Version '2' og '3' har identiske template-felter; frontend accepterer kun '2' eller '3'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "templates"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": ["2", "3"],
+      "description": "Skal være strengen \"2\" eller \"3\". Andre værdier giver 'Unsupported template version' i UI."
+    },
+    "templates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/template" }
+    }
+  },
+
+  "definitions": {
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "description"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Template-ID. Portainer-backend overskriver værdien med (index + 1) ved indlæsning."
+        },
+        "type": {
+          "type": "integer",
+          "enum": [1, 2, 3, 4],
+          "description": "1 = container, 2 = Swarm stack, 3 = Compose stack, 4 = Compose edge stack."
+        },
+        "title": { "type": "string", "minLength": 1, "description": "Template-titel." },
+        "description": { "type": "string", "description": "Template-beskrivelse." },
+        "administrator_only": {
+          "type": "boolean",
+          "description": "true = kun synlig for administratorer."
+        },
+
+        "name": { "type": "string", "description": "Standardnavn for container/stack ved deploy." },
+        "logo": { "type": "string", "format": "uri", "description": "URL til logo." },
+        "note": { "type": "string", "description": "Note vist i deploy-formularen. Understøtter HTML." },
+        "platform": {
+          "type": "string",
+          "enum": ["linux", "windows", ""],
+          "description": "'linux', 'windows' eller tom for multi-platform."
+        },
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "Kategorier til filteret i UI."
+        },
+        "env": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/env" }
+        },
+
+        "image": { "type": "string", "minLength": 1, "description": "Docker-image, fx nginx:latest. Påkrævet for type 1." },
+        "registry": { "type": "string", "description": "Registry for image, fx quay.io. Standard: Docker Hub." },
+        "command": { "type": "string", "description": "Kommando der køres i containeren." },
+        "network": { "type": "string", "description": "Navn på eksisterende Docker-netværk." },
+        "volumes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/volume" }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([0-9]{1,5}:)?[0-9]{1,5}/(tcp|udp)$",
+            "description": "[hostPort:]containerPort/protocol – fx \"8080:80/tcp\" eller \"443/tcp\"."
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/pair" }
+        },
+        "privileged": { "type": "boolean", "description": "Start container i privileged mode. Standard false." },
+        "interactive": { "type": "boolean", "description": "Start container interaktivt (-i -t). Standard false." },
+        "restart_policy": {
+          "type": "string",
+          "enum": ["always", "no", "on-failure", "unless-stopped"],
+          "description": "Standard 'always' hvis udeladt."
+        },
+        "hostname": { "type": "string", "description": "Container-hostname." },
+
+        "repository": { "$ref": "#/definitions/repository" },
+
+        "stackFile": {
+          "type": "string",
+          "description": "Stack-fil (URL) til type 4 edge-templates. Go-decoderen matcher feltnavn case-insensitivt."
+        },
+        "stackfile": {
+          "type": "string",
+          "description": "Stavemåde brugt i officiel templates-2.0.json (type 4). Svarer til stackFile."
+        }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": 1 } }, "required": ["type"] },
+          "then": { "required": ["image"] }
+        },
+        {
+          "if": { "properties": { "type": { "enum": [2, 3] } }, "required": ["type"] },
+          "then": { "required": ["repository"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": 4 } }, "required": ["type"] },
+          "then": { "anyOf": [ { "required": ["stackFile"] }, { "required": ["stackfile"] } ] }
+        }
+      ]
+    },
+
+    "env": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "description": "Navn på miljøvariablen." },
+        "label": { "type": "string", "description": "Label i UI. Påkrævet medmindre preset = true." },
+        "description": { "type": "string", "description": "Tooltip i UI." },
+        "default": { "type": "string", "description": "Standardværdi." },
+        "preset": { "type": "boolean", "description": "true = intet input genereres i UI." },
+        "select": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/envSelect" },
+          "description": "Genererer en dropdown i UI."
+        },
+        "type": {
+          "type": "string",
+          "description": "Forekommer i officiel v3 templates.json (\"container\"), men findes ikke i Go-structen TemplateEnv og ignoreres ved indlæsning."
+        }
+      },
+      "if": {
+        "not": { "properties": { "preset": { "const": true } }, "required": ["preset"] }
+      },
+      "then": { "required": ["label"] }
+    },
+
+    "envSelect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "value"],
+      "properties": {
+        "text": { "type": "string", "description": "Tekst vist som valgmulighed." },
+        "value": { "type": "string", "description": "Værdi tilknyttet valget." },
+        "default": { "type": "boolean", "description": "true = forvalgt." }
+      }
+    },
+
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container"],
+      "properties": {
+        "container": { "type": "string", "minLength": 1, "description": "Sti inde i containeren." },
+        "bind": { "type": "string", "description": "Sti på host (bind mount). Udeladt = Docker-volume." },
+        "readonly": { "type": "boolean", "description": "true = read-only mount." }
+      }
+    },
+
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "stackfile"],
+      "properties": {
+        "url": { "type": "string", "format": "uri", "description": "URL til offentligt Git-repository." },
+        "stackfile": { "type": "string", "minLength": 1, "description": "Sti til compose/stack-fil i repositoriet." }
+      }
+    },
+
+    "pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}
