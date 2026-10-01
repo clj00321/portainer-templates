@@ -1,0 +1,610 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://portainer.io/schemas/app-templates.schema.json",
+  "$comment": "Converted from the official Portainer documentation (2.45): https://raw.githubusercontent.com/portainer/portainer-docs/refs/heads/2.45/3.0-sts/advanced/app-templates/format.md",
+  "title": "App template JSON format",
+  "description": "App template definitions are written in JSON. Valid templates consist of an array, and every template definition consists of one element.",
+  "type": "object",
+  "required": [
+    "version",
+    "templates"
+  ],
+  "properties": {
+    "version": {
+      "description": "The app template definition format version.",
+      "type": "string",
+      "const": "2"
+    },
+    "templates": {
+      "description": "Every template definition consists of one element of this array.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/template"
+      }
+    }
+  },
+  "definitions": {
+    "template": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/containerTemplate"
+        },
+        {
+          "$ref": "#/definitions/swarmStackTemplate"
+        },
+        {
+          "$ref": "#/definitions/composeStackTemplate"
+        }
+      ]
+    },
+    "containerTemplate": {
+      "title": "Container template",
+      "description": "Container template definition format. A container template element must be a valid JSON object, composed of both mandatory and optional data fields.",
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "description",
+        "image"
+      ],
+      "properties": {
+        "type": {
+          "description": "The template type. Format: Integer. Valid values: 1 = container; 2 = Swarm stack; 3 = Compose stack.",
+          "type": "integer",
+          "enum": [
+            1
+          ]
+        },
+        "title": {
+          "description": "The template title. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "description": {
+          "description": "The template description. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The Docker image associated with a template. Format: String. Valid values: Any valid URL.",
+          "type": "string"
+        },
+        "administrator-only": {
+          "description": "Indicates whether or not a template should be available just to admin users. Valid values: `true` = available to admins only; `false` = available to all users.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The default name of a template (shows in the Portainer UI). Format: String. Valid values: Any valid string.",
+          "type": "string"
+        },
+        "logo": {
+          "description": "The template logo. Format: String. Valid values: Any valid URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "registry": {
+          "description": "The registry where the Docker image is stored. If not specified, Portainer will use Docker Hub as the default. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "command": {
+          "description": "The command to run in the container. If not specified, the container will use the default command in its Dockerfile. Format: String. Valid values: Any string value.",
+          "type": "string",
+          "examples": [
+            "/bin/bash -c \"echo hello\" && exit 777"
+          ]
+        },
+        "env": {
+          "description": "A JSON array describing the environment variables required by a template. Each element in the array must be a valid JSON object. An input will be generated in the templates view for each element in the array. Depending on the object properties, different types of inputs can be generated (text input, select). Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "if": {
+              "not": {
+                "required": [
+                  "select"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "label"
+              ]
+            },
+            "properties": {
+              "name": {
+                "description": "the name of the environment variable, as supported in the container image (mandatory)",
+                "type": "string"
+              },
+              "label": {
+                "description": "label for the input in the UI (mandatory unless set is present)",
+                "type": "string"
+              },
+              "description": {
+                "description": "a short description for this input, will be available as a tooltip in the UI (optional)",
+                "type": "string"
+              },
+              "default": {
+                "description": "default value associated to the variable (optional)",
+                "type": "string"
+              },
+              "preset": {
+                "description": "boolean. If set to true, the UI will not generate an input (optional)",
+                "type": "boolean"
+              },
+              "select": {
+                "description": "an array of possible values, will generate a select input (optional)",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "value"
+                  ],
+                  "properties": {
+                    "text": {
+                      "description": "The option text shown in the select input.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "The option value.",
+                      "type": "string"
+                    },
+                    "default": {
+                      "description": "Marks this option as the default selection.",
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "network": {
+          "description": "A string that corresponds to the name of an existing Docker network. Will auto-select the network in the templates view. Format: String. Valid values: Any string value. If the string does not match an existing network name when the template is used it will fall back to the first available network.",
+          "type": "string",
+          "examples": [
+            "host"
+          ]
+        },
+        "volumes": {
+          "description": "A JSON array describing the volumes associated with a template. Each element in the array must be a valid JSON object with a required `container` property. For each element in the array, a Docker volume will be created and associated when starting the container. If a `bind` property is defined, it will be used as the source of a bind mount. If a `readonly` property is defined and = `true`, the volume will be mounted in `readonly` mode. Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "container"
+            ],
+            "properties": {
+              "container": {
+                "description": "The container path of the volume.",
+                "type": "string"
+              },
+              "bind": {
+                "description": "If defined, it will be used as the source of a bind mount.",
+                "type": "string"
+              },
+              "readonly": {
+                "description": "If defined and `true`, the volume will be mounted in `readonly` mode.",
+                "type": "boolean"
+              }
+            }
+          },
+          "examples": [
+            [
+              {
+                "container": "/etc/nginx"
+              },
+              {
+                "container": "/usr/share/nginx/html",
+                "bind": "/var/www",
+                "readonly": true
+              }
+            ]
+          ]
+        },
+        "ports": {
+          "description": "A JSON array describing the ports exposed by a template. Each element in the array must be a valid JSON string specifying the port number in the container, as well as the protocol. Can be optionally prefixed with a port number and colon (for example `8080:`) to define the port to be mapped on the host. If the host port is not specified, the Docker host will automatically assign it when starting the container. Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "8080:80/tcp",
+              "443/tcp"
+            ]
+          ]
+        },
+        "labels": {
+          "description": "A JSON array describing the labels associated with a template. Each element in the array must be a valid JSON object with two properties (name: and \"<value>\"). Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "description": "The label name.",
+                "type": "string"
+              },
+              "value": {
+                "description": "The label value.",
+                "type": "string"
+              }
+            },
+            "examples": [
+              {
+                "name": "com.example.vendor",
+                "value": "Acme"
+              }
+            ]
+          }
+        },
+        "privileged": {
+          "description": "Indicates whether or not the container should be started in `privileged` mode. Defaults to `false` if not specified. Valid values: `true` = start the container in privileged mode; `false` = do not start the container in privileged mode",
+          "type": "boolean",
+          "default": false
+        },
+        "interactive": {
+          "description": "Indicates whether or not the container should be started in `foreground` mode. Defaults to `false` if not specified. Valid values: `true` = start the container in foreground mode; `false` = do not start the container in foreground mode",
+          "type": "boolean",
+          "default": false
+        },
+        "restart_policy": {
+          "description": "The restart policy associated with the container. Will default to `\"always\"` if no value is specified. Valid values: `\"always\"` Always restart the container regardless of the exit status. `\"no\"` Never automatically restart the container. `\"on-failure\"` Restart the container only if it exits with a non-zero status. `\"unless-stopped\"` Always restart the container regardless of the exit status (unless the container was manually stopped).",
+          "type": "string",
+          "enum": [
+            "always",
+            "no",
+            "on-failure",
+            "unless-stopped"
+          ],
+          "default": "always"
+        },
+        "hostname": {
+          "description": "The hostname of the container. Will default to Docker if not specified. Format: String. Valid values: Any string value.",
+          "type": "string",
+          "examples": [
+            "mycontainername"
+          ]
+        },
+        "note": {
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "platform": {
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI. Must contain a valid value. Format: String. Valid values: \"linux\"; \"windows\".",
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "categories": {
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI. Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "webserver",
+              "open-source"
+            ]
+          ]
+        }
+      }
+    },
+    "swarmStackTemplate": {
+      "title": "Swarm stack template",
+      "description": "Stack template definition format. A stack template element must be a valid JSON object, composed of mandatory and optional data fields. A Swarm stack will be deployed using the equivalent of `docker stack deploy`.",
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "description",
+        "repository"
+      ],
+      "properties": {
+        "type": {
+          "description": "The template type. A Swarm stack will be deployed using the equivalent of `docker stack deploy`. A Compose stack will be deployed using the equivalent of `docker-compose`. Format: Integer. Valid values: 1 = container; 2 = Swarm stack; 3 = Compose stack.",
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "title": {
+          "description": "The template title. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "description": {
+          "description": "The template description. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "repository": {
+          "description": "A JSON object describing the public Git repository from where the stack template will be loaded. It indicates the URL of the Git repository as well as the path to the Compose file inside the repository. WARNING: This value must reference a Git repository. Format: Object.",
+          "type": "object",
+          "required": [
+            "url",
+            "stackfile"
+          ],
+          "properties": {
+            "url": {
+              "description": "URL of the public git repository (mandatory)",
+              "type": "string",
+              "format": "uri"
+            },
+            "stackfile": {
+              "description": "Path to the Compose file inside the repository (mandatory)",
+              "type": "string"
+            }
+          }
+        },
+        "administrator_only": {
+          "description": "Indicates whether or not a template should be available just to admin users. Valid values: `true` = available to admins only; `false` = available to all users.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The default name of a template (shows in the Portainer UI). Format: String. Valid values: Any valid string.",
+          "type": "string"
+        },
+        "logo": {
+          "description": "The template logo. Format: String. Valid values: Any valid URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "env": {
+          "description": "A JSON array describing the environment variables required by a template. Each element in the array must be a valid JSON object. An input will be generated in the templates view for each element in the array. Depending on the object properties, different types of inputs can be generated (text input, select). Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "if": {
+              "not": {
+                "required": [
+                  "select"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "label"
+              ]
+            },
+            "properties": {
+              "name": {
+                "description": "the name of the environment variable, as supported in the container image (mandatory)",
+                "type": "string"
+              },
+              "label": {
+                "description": "label for the input in the UI (mandatory unless set is present)",
+                "type": "string"
+              },
+              "description": {
+                "description": "a short description for this input, will be available as a tooltip in the UI (optional)",
+                "type": "string"
+              },
+              "default": {
+                "description": "default value associated to the variable (optional)",
+                "type": "string"
+              },
+              "preset": {
+                "description": "boolean. If set to true, the UI will not generate an input (optional)",
+                "type": "boolean"
+              },
+              "select": {
+                "description": "an array of possible values, will generate a select input (optional)",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "value"
+                  ],
+                  "properties": {
+                    "text": {
+                      "description": "The option text shown in the select input.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "The option value.",
+                      "type": "string"
+                    },
+                    "default": {
+                      "description": "Marks this option as the default selection.",
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "note": {
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "platform": {
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI. Must contain a valid value. Format: String. Valid values: \"linux\"; \"windows\".",
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "categories": {
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI. Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "webserver",
+              "open-source"
+            ]
+          ]
+        }
+      }
+    },
+    "composeStackTemplate": {
+      "title": "Compose stack template",
+      "description": "Stack template definition format. A stack template element must be a valid JSON object, composed of mandatory and optional data fields. A Compose stack will be deployed using the equivalent of `docker-compose`. Other information: Type 3 is limited to using the version `\"2\"` stack format (this is a docker/libcompose limitation).",
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "description",
+        "repository"
+      ],
+      "properties": {
+        "type": {
+          "description": "The template type. A Swarm stack will be deployed using the equivalent of `docker stack deploy`. A Compose stack will be deployed using the equivalent of `docker-compose`. Format: Integer. Valid values: 1 = container; 2 = Swarm stack; 3 = Compose stack.",
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "title": {
+          "description": "The template title. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "description": {
+          "description": "The template description. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "repository": {
+          "description": "A JSON object describing the public Git repository from where the stack template will be loaded. It indicates the URL of the Git repository as well as the path to the Compose file inside the repository. WARNING: This value must reference a Git repository. Format: Object.",
+          "type": "object",
+          "required": [
+            "url",
+            "stackfile"
+          ],
+          "properties": {
+            "url": {
+              "description": "URL of the public git repository (mandatory)",
+              "type": "string",
+              "format": "uri"
+            },
+            "stackfile": {
+              "description": "Path to the Compose file inside the repository (mandatory)",
+              "type": "string"
+            }
+          }
+        },
+        "administrator_only": {
+          "description": "Indicates whether or not a template should be available just to admin users. Valid values: `true` = available to admins only; `false` = available to all users.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The default name of a template (shows in the Portainer UI). Format: String. Valid values: Any valid string.",
+          "type": "string"
+        },
+        "logo": {
+          "description": "The template logo. Format: String. Valid values: Any valid URL.",
+          "type": "string",
+          "format": "uri"
+        },
+        "env": {
+          "description": "A JSON array describing the environment variables required by a template. Each element in the array must be a valid JSON object. An input will be generated in the templates view for each element in the array. Depending on the object properties, different types of inputs can be generated (text input, select). Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "if": {
+              "not": {
+                "required": [
+                  "select"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "label"
+              ]
+            },
+            "properties": {
+              "name": {
+                "description": "the name of the environment variable, as supported in the container image (mandatory)",
+                "type": "string"
+              },
+              "label": {
+                "description": "label for the input in the UI (mandatory unless set is present)",
+                "type": "string"
+              },
+              "description": {
+                "description": "a short description for this input, will be available as a tooltip in the UI (optional)",
+                "type": "string"
+              },
+              "default": {
+                "description": "default value associated to the variable (optional)",
+                "type": "string"
+              },
+              "preset": {
+                "description": "boolean. If set to true, the UI will not generate an input (optional)",
+                "type": "boolean"
+              },
+              "select": {
+                "description": "an array of possible values, will generate a select input (optional)",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "value"
+                  ],
+                  "properties": {
+                    "text": {
+                      "description": "The option text shown in the select input.",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "The option value.",
+                      "type": "string"
+                    },
+                    "default": {
+                      "description": "Marks this option as the default selection.",
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "note": {
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML. Format: String. Valid values: Any string value.",
+          "type": "string"
+        },
+        "platform": {
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI. Must contain a valid value. Format: String. Valid values: \"linux\"; \"windows\".",
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "categories": {
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI. Format: Array.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "webserver",
+              "open-source"
+            ]
+          ]
+        }
+      }
+    }
+  }
+}
