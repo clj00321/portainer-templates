@@ -1,0 +1,766 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/portainer/templates/templates.json",
+  "title": "Portainer App Templates (version 2 & 3)",
+  "description": "Schema for Portainer App Template definitions, format versions \"2\" and \"3\". The document is validated as version 2 or version 3 depending on the root \"version\" field. Based on the official Portainer documentation: https://github.com/portainer/portainer-docs/blob/dfd76caca456795591923a16ea92d670b172462d/lts/advanced/app-templates/format.md",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/version2"
+    },
+    {
+      "$ref": "#/$defs/version3"
+    }
+  ],
+  "$defs": {
+    "version2": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "2",
+          "description": "The version of the template definition format. Must be \"2\"."
+        },
+        "templates": {
+          "type": "array",
+          "description": "Array of template definitions. Each element is either a container template (type 1) or a stack template (type 2 or 3).",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/containerTemplateV2"
+              },
+              {
+                "$ref": "#/$defs/stackTemplateV2"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "version",
+        "templates"
+      ],
+      "additionalProperties": false
+    },
+    "version3": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "3",
+          "description": "The version of the template definition format. Must be \"3\"."
+        },
+        "templates": {
+          "type": "array",
+          "description": "Array of template definitions. Each element is either a container template (type 1) or a stack template (type 2 or 3).",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/containerTemplateV3"
+              },
+              {
+                "$ref": "#/$defs/stackTemplateV3"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "version",
+        "templates"
+      ],
+      "additionalProperties": false
+    },
+    "envVariableV2": {
+      "type": "object",
+      "description": "An environment variable required by a template. Depending on the object properties, different types of inputs can be generated (text input, select).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the environment variable, as supported in the container image (mandatory)."
+        },
+        "label": {
+          "type": "string",
+          "description": "Label for the input in the UI (mandatory unless preset is present)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description for this input, will be available as a tooltip in the UI (optional)."
+        },
+        "default": {
+          "type": "string",
+          "description": "Default value associated to the variable (optional)."
+        },
+        "preset": {
+          "type": "boolean",
+          "description": "Boolean. If set to true, the UI will not generate an input (optional)."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of the environment variable input, e.g. \"container\" to reference another container (optional; undocumented, but used by the official Portainer templates)."
+        },
+        "select": {
+          "type": "array",
+          "description": "An array of possible values, will generate a select input (optional).",
+          "items": {
+            "$ref": "#/$defs/envSelectValueV2"
+          }
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "label"
+          ]
+        },
+        {
+          "required": [
+            "preset"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "envVariableV3": {
+      "type": "object",
+      "description": "An environment variable required by a template. Depending on the object properties, different types of inputs can be generated (text input, select).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the environment variable, as supported in the container image (mandatory)."
+        },
+        "label": {
+          "type": "string",
+          "description": "Label for the input in the UI (mandatory unless preset is present)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description for this input, will be available as a tooltip in the UI (optional)."
+        },
+        "default": {
+          "type": "string",
+          "description": "Default value associated to the variable (optional)."
+        },
+        "preset": {
+          "type": "boolean",
+          "description": "Boolean. If set to true, the UI will not generate an input (optional)."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of the environment variable input, e.g. \"container\" to reference another container (optional; undocumented, but used by the official Portainer templates)."
+        },
+        "select": {
+          "type": "array",
+          "description": "An array of possible values, will generate a select input (optional).",
+          "items": {
+            "$ref": "#/$defs/envSelectValueV3"
+          }
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "label"
+          ]
+        },
+        {
+          "required": [
+            "preset"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "envSelectValueV2": {
+      "type": "object",
+      "description": "A possible value for a select input.",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text shown for this option in the select input."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value assigned to the environment variable when this option is selected."
+        },
+        "default": {
+          "type": "boolean",
+          "description": "If true, this option is pre-selected by default."
+        }
+      },
+      "required": [
+        "text",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "envSelectValueV3": {
+      "type": "object",
+      "description": "A possible value for a select input.",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text shown for this option in the select input."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value assigned to the environment variable when this option is selected."
+        },
+        "default": {
+          "type": "boolean",
+          "description": "If true, this option is pre-selected by default."
+        }
+      },
+      "required": [
+        "text",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "volumeV2": {
+      "type": "object",
+      "description": "A volume associated with a template. For each element, a Docker volume will be created and associated when starting the container. If a bind property is defined, it will be used as the source of a bind mount. If readonly is defined and true, the volume will be mounted in readonly mode.",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "Path inside the container where the volume is mounted (required)."
+        },
+        "bind": {
+          "type": "string",
+          "description": "Path on the host used as the source of a bind mount (optional)."
+        },
+        "readonly": {
+          "type": "boolean",
+          "description": "If true, the volume will be mounted in readonly mode (optional)."
+        }
+      },
+      "required": [
+        "container"
+      ],
+      "additionalProperties": false
+    },
+    "volumeV3": {
+      "type": "object",
+      "description": "A volume associated with a template. For each element, a Docker volume will be created and associated when starting the container. If a bind property is defined, it will be used as the source of a bind mount. If readonly is defined and true, the volume will be mounted in readonly mode.",
+      "properties": {
+        "container": {
+          "type": "string",
+          "description": "Path inside the container where the volume is mounted (required)."
+        },
+        "bind": {
+          "type": "string",
+          "description": "Path on the host used as the source of a bind mount (optional)."
+        },
+        "readonly": {
+          "type": "boolean",
+          "description": "If true, the volume will be mounted in readonly mode (optional)."
+        }
+      },
+      "required": [
+        "container"
+      ],
+      "additionalProperties": false
+    },
+    "portV2": {
+      "type": "string",
+      "pattern": "^([0-9]{1,5}:)?[0-9]{1,5}/(tcp|udp)$",
+      "description": "Port number in the container and protocol, e.g. \"443/tcp\". Can optionally be prefixed with a host port and colon, e.g. \"8080:80/tcp\". If the host port is not specified, the Docker host will automatically assign it."
+    },
+    "portV3": {
+      "type": "string",
+      "pattern": "^([0-9]{1,5}:)?[0-9]{1,5}/(tcp|udp)$",
+      "description": "Port number in the container and protocol, e.g. \"443/tcp\". Can optionally be prefixed with a host port and colon, e.g. \"8080:80/tcp\". If the host port is not specified, the Docker host will automatically assign it."
+    },
+    "labelV2": {
+      "type": "object",
+      "description": "A label associated with a template.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Label name, e.g. \"com.example.vendor\"."
+        },
+        "value": {
+          "type": "string",
+          "description": "Label value, e.g. \"Acme\"."
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "labelV3": {
+      "type": "object",
+      "description": "A label associated with a template.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Label name, e.g. \"com.example.vendor\"."
+        },
+        "value": {
+          "type": "string",
+          "description": "Label value, e.g. \"Acme\"."
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "repositoryV2": {
+      "type": "object",
+      "description": "The public Git repository from where the stack template will be loaded. Indicates the URL of the Git repository as well as the path to the Compose file inside the repository. This value must reference a Git repository.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the public git repository (mandatory)."
+        },
+        "stackfile": {
+          "type": "string",
+          "description": "Path to the Compose file inside the repository (mandatory)."
+        }
+      },
+      "required": [
+        "url",
+        "stackfile"
+      ],
+      "additionalProperties": false
+    },
+    "repositoryV3": {
+      "type": "object",
+      "description": "The public Git repository from where the stack template will be loaded. Indicates the URL of the Git repository as well as the path to the Compose file inside the repository. This value must reference a Git repository.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the public git repository (mandatory)."
+        },
+        "stackfile": {
+          "type": "string",
+          "description": "Path to the Compose file inside the repository (mandatory)."
+        }
+      },
+      "required": [
+        "url",
+        "stackfile"
+      ],
+      "additionalProperties": false
+    },
+    "containerTemplateV2": {
+      "type": "object",
+      "description": "A container template element (type 1).",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "const": 1,
+          "description": "The template type. 1 = container."
+        },
+        "title": {
+          "type": "string",
+          "description": "The template title (required)."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description (required)."
+        },
+        "image": {
+          "type": "string",
+          "description": "The Docker image associated with a template (required)."
+        },
+        "administrator-only": {
+          "type": "boolean",
+          "description": "Indicates whether or not a template should be available just to admin users. true = available to admins only; false = available to all users (optional)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The default name of a template, shows in the Portainer UI (optional)."
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri",
+          "description": "The template logo. Any valid URL (optional)."
+        },
+        "registry": {
+          "type": "string",
+          "description": "The registry where the Docker image is stored. If not specified, Portainer will use Docker Hub as the default (optional)."
+        },
+        "command": {
+          "type": "string",
+          "description": "The command to run in the container. If not specified, the container will use the default command in its Dockerfile (optional)."
+        },
+        "env": {
+          "type": "array",
+          "description": "A JSON array describing the environment variables required by a template. An input will be generated in the templates view for each element in the array (optional).",
+          "items": {
+            "$ref": "#/$defs/envVariableV2"
+          }
+        },
+        "network": {
+          "type": "string",
+          "description": "A string that corresponds to the name of an existing Docker network. Will auto-select the network in the templates view (optional)."
+        },
+        "volumes": {
+          "type": "array",
+          "description": "A JSON array describing the volumes associated with a template (optional).",
+          "items": {
+            "$ref": "#/$defs/volumeV2"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "description": "A JSON array describing the ports exposed by a template, e.g. \"8080:80/tcp\" or \"443/tcp\" (optional).",
+          "items": {
+            "$ref": "#/$defs/portV2"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "description": "A JSON array describing the labels associated with a template (optional).",
+          "items": {
+            "$ref": "#/$defs/labelV2"
+          }
+        },
+        "privileged": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates whether or not the container should be started in privileged mode. Defaults to false if not specified (optional)."
+        },
+        "interactive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates whether or not the container should be started in foreground mode. Defaults to false if not specified (optional)."
+        },
+        "restart_policy": {
+          "type": "string",
+          "enum": [
+            "always",
+            "no",
+            "on-failure",
+            "unless-stopped"
+          ],
+          "default": "always",
+          "description": "The restart policy associated with the container. Will default to \"always\" if no value is specified (optional)."
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the container. Will default to Docker if not specified (optional)."
+        },
+        "note": {
+          "type": "string",
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML (optional)."
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ],
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI (optional)."
+        },
+        "categories": {
+          "type": "array",
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI (optional).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "description",
+        "image"
+      ],
+      "additionalProperties": false
+    },
+    "containerTemplateV3": {
+      "type": "object",
+      "description": "A container template element (type 1).",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier of the template (required in version 3 templates)."
+        },
+        "type": {
+          "type": "integer",
+          "const": 1,
+          "description": "The template type. 1 = container."
+        },
+        "title": {
+          "type": "string",
+          "description": "The template title (required)."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description (required)."
+        },
+        "image": {
+          "type": "string",
+          "description": "The Docker image associated with a template (required)."
+        },
+        "administrator-only": {
+          "type": "boolean",
+          "description": "Indicates whether or not a template should be available just to admin users. true = available to admins only; false = available to all users (optional)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The default name of a template, shows in the Portainer UI (optional)."
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri",
+          "description": "The template logo. Any valid URL (optional)."
+        },
+        "registry": {
+          "type": "string",
+          "description": "The registry where the Docker image is stored. If not specified, Portainer will use Docker Hub as the default (optional)."
+        },
+        "command": {
+          "type": "string",
+          "description": "The command to run in the container. If not specified, the container will use the default command in its Dockerfile (optional)."
+        },
+        "env": {
+          "type": "array",
+          "description": "A JSON array describing the environment variables required by a template. An input will be generated in the templates view for each element in the array (optional).",
+          "items": {
+            "$ref": "#/$defs/envVariableV3"
+          }
+        },
+        "network": {
+          "type": "string",
+          "description": "A string that corresponds to the name of an existing Docker network. Will auto-select the network in the templates view (optional)."
+        },
+        "volumes": {
+          "type": "array",
+          "description": "A JSON array describing the volumes associated with a template (optional).",
+          "items": {
+            "$ref": "#/$defs/volumeV3"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "description": "A JSON array describing the ports exposed by a template, e.g. \"8080:80/tcp\" or \"443/tcp\" (optional).",
+          "items": {
+            "$ref": "#/$defs/portV3"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "description": "A JSON array describing the labels associated with a template (optional).",
+          "items": {
+            "$ref": "#/$defs/labelV3"
+          }
+        },
+        "privileged": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates whether or not the container should be started in privileged mode. Defaults to false if not specified (optional)."
+        },
+        "interactive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates whether or not the container should be started in foreground mode. Defaults to false if not specified (optional)."
+        },
+        "restart_policy": {
+          "type": "string",
+          "enum": [
+            "always",
+            "no",
+            "on-failure",
+            "unless-stopped"
+          ],
+          "default": "always",
+          "description": "The restart policy associated with the container. Will default to \"always\" if no value is specified (optional)."
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the container. Will default to Docker if not specified (optional)."
+        },
+        "note": {
+          "type": "string",
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML (optional)."
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ],
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI (optional)."
+        },
+        "categories": {
+          "type": "array",
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI (optional).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "description",
+        "image"
+      ],
+      "additionalProperties": false
+    },
+    "stackTemplateV2": {
+      "type": "object",
+      "description": "A stack template element (type 2 = Swarm stack, type 3 = Compose stack).",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "enum": [
+            2,
+            3
+          ],
+          "description": "The template type. 2 = Swarm stack (deployed using the equivalent of docker stack deploy); 3 = Compose stack (deployed using the equivalent of docker-compose). Type 3 is limited to using the version \"2\" stack format (docker/libcompose limitation)."
+        },
+        "title": {
+          "type": "string",
+          "description": "The template title (required)."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description (required)."
+        },
+        "repository": {
+          "$ref": "#/$defs/repositoryV2",
+          "description": "A JSON object describing the public Git repository from where the stack template will be loaded (required). This value must reference a Git repository."
+        },
+        "administrator_only": {
+          "type": "boolean",
+          "description": "Indicates whether or not a template should be available just to admin users. true = available to admins only; false = available to all users (optional)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The default name of a template, shows in the Portainer UI (optional)."
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri",
+          "description": "The template logo. Any valid URL (optional)."
+        },
+        "env": {
+          "type": "array",
+          "description": "A JSON array describing the environment variables required by a template. An input will be generated in the templates view for each element in the array (optional).",
+          "items": {
+            "$ref": "#/$defs/envVariableV2"
+          }
+        },
+        "note": {
+          "type": "string",
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML (optional)."
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ],
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI (optional)."
+        },
+        "categories": {
+          "type": "array",
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI (optional).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "description",
+        "repository"
+      ],
+      "additionalProperties": false
+    },
+    "stackTemplateV3": {
+      "type": "object",
+      "description": "A stack template element (type 2 = Swarm stack, type 3 = Compose stack).",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier of the template (required in version 3 templates)."
+        },
+        "type": {
+          "type": "integer",
+          "enum": [
+            2,
+            3
+          ],
+          "description": "The template type. 2 = Swarm stack (deployed using the equivalent of docker stack deploy); 3 = Compose stack (deployed using the equivalent of docker-compose). Type 3 is limited to using the version \"2\" stack format (docker/libcompose limitation)."
+        },
+        "title": {
+          "type": "string",
+          "description": "The template title (required)."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description (required)."
+        },
+        "repository": {
+          "$ref": "#/$defs/repositoryV3",
+          "description": "A JSON object describing the public Git repository from where the stack template will be loaded (required). This value must reference a Git repository."
+        },
+        "administrator_only": {
+          "type": "boolean",
+          "description": "Indicates whether or not a template should be available just to admin users. true = available to admins only; false = available to all users (optional)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The default name of a template, shows in the Portainer UI (optional)."
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri",
+          "description": "The template logo. Any valid URL (optional)."
+        },
+        "env": {
+          "type": "array",
+          "description": "A JSON array describing the environment variables required by a template. An input will be generated in the templates view for each element in the array (optional).",
+          "items": {
+            "$ref": "#/$defs/envVariableV3"
+          }
+        },
+        "note": {
+          "type": "string",
+          "description": "Extra information about a template, for example what it is used for. Displayed inside the template-creation form in the Portainer UI. Supports HTML (optional)."
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ],
+          "description": "The supported platform. Displays a small platform-related icon in the Portainer UI (optional)."
+        },
+        "categories": {
+          "type": "array",
+          "description": "An array of categories associated with a template. Populates the category filter in the Portainer UI (optional).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "description",
+        "repository"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
